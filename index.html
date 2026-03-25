@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TIEF</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="hdr">
+  <div class="logo">T I E F</div>
+  <div class="logo-sub">// anlage eos — ebene unbekannt</div>
+  <div id="hdr-right">
+    <div id="floor-ind">ebene <span id="floor-num">—</span></div>
+    <div id="mad-hdr"></div>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- LOG -->
+  <div class="panel" id="lpanel">
+    <div class="ptitle">// aufzeichnungen</div>
+    <div id="log"></div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="cpanel">
+
+    <!-- BASE PHASE -->
+    <div id="base-art"></div>
+    <div id="scene-desc"></div>
+    <div id="actions"></div>
+
+    <!-- ZEICHEN (wall signs, visible after Fackel) -->
+    <div id="zeichen-section" style="display:none">
+      <div class="csec-title">// zeichen</div>
+      <div id="zeichen-display"></div>
+      <div id="zeichen-desc"></div>
+    </div>
+
+    <div id="craft-section">
+      <div class="csec-title">// werkstatt</div>
+      <div id="build-list"></div>
+      <div class="csec-title" id="craft-title" style="display:none">// fertigung</div>
+      <div id="craft-list"></div>
+    </div>
+
+    <!-- EXPLORE PHASE -->
+    <div id="map-wrap">
+      <div class="ptitle" style="align-self:flex-start">// grundriss — ebene <span id="map-floor-num">1</span></div>
+      <div id="map-grid"></div>
+      <div id="room-desc"></div>
+      <div id="move-btns"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: resources, stats, artifacts -->
+  <div class="panel" id="rpanel">
+    <div class="ptitle">// zustand</div>
+    <div id="res-list"></div>
+
+    <div id="wahn-bar-wrap">
+      <div class="wahn-label">
+        <span>WAHNSINN</span><span id="wahn-pct">0%</span>
+      </div>
+      <div class="wahn-bg"><div class="wahn-fill" id="wahn-fill" style="width:0%"></div></div>
+    </div>
+
+    <div id="stats-sec" style="display:none">
+      <div class="sdiv">// kampfwerte</div>
+      <div id="stats-list"></div>
+    </div>
+
+    <div id="artifact-sec" style="display:none">
+      <div class="sdiv">// relikte</div>
+      <div id="artifact-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<div id="ftr">
+  <div>phase: <span id="ft-phase">initialisiert</span></div>
+  <div id="ft-room" style="display:none">raum: <span id="ft-roomtype">—</span></div>
+  <div style="margin-left:auto"><span id="ft-time">00:00</span></div>
+</div>
+
+<!-- COMBAT OVERLAY -->
+<div class="ov" id="cbt-ov">
+  <div class="ptitle">// kontakt</div>
+  <div id="cbt-art"></div>
+  <div id="cbt-msg"></div>
+  <div id="cbt-hud">
+    <div class="hud-col">
+      <div class="hud-lbl gg">DU</div>
+      <div class="hp-bg"><div class="hp-fill hpf-p" id="bar-p" style="width:100%"></div></div>
+      <div class="hp-txt" id="txt-p"></div>
+    </div>
+    <div class="hud-col">
+      <div class="hud-lbl gr" id="hud-en">ENTITÄT</div>
+      <div class="hp-bg"><div class="hp-fill hpf-e" id="bar-e" style="width:100%"></div></div>
+      <div class="hp-txt" id="txt-e"></div>
+    </div>
+  </div>
+  <div id="cbt-btns"></div>
+</div>
+
+<!-- EVENT / ARTIFACT OVERLAY -->
+<div class="ov" id="ev-ov">
+  <div id="ev-art"></div>
+  <div id="ev-title"></div>
+  <div id="ev-body"></div>
+  <div id="ev-btns"></div>
+</div>
+
+<!-- ENDING OVERLAY -->
+<div class="ov" id="end-ov">
+  <div id="end-art"></div>
+  <div id="end-title"></div>
+  <div id="end-body"></div>
+</div>
+
+<script src="data.js"></script>
+<script src="map.js"></script>
+<script src="state.js"></script>
+<script src="combat.js"></script>
+<script src="base.js"></script>
+<script src="explore.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
