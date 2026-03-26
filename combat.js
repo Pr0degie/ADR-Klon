@@ -69,6 +69,7 @@ function cbtAct(action) {
     checkLevelUp();
     setCombatMsg(`${enemy.name} aufgelöst. ${lootParts.join(', ')}.`, 'green');
     log(`${enemy.name} besiegt. ${lootParts.join(', ')}.`, 'metal');
+    if (!G.unlocked.firstKill) { G.unlocked.firstKill=true; journalAdd(`erste entität besiegt: ${enemy.name}`); }
     setTimeout(()=>endCombat(true), 1800); return;
   }
 
@@ -115,6 +116,7 @@ function checkLevelUp() {
     G.player.atk++;
     if (G.player.lvl%3===0) G.player.def++;
     log(`level ${G.player.lvl}. du bist stärker. oder abgestumpfter.`, 'green');
+    journalAdd(`stufe ${G.player.lvl} erreicht`);
   }
 }
 

@@ -26,7 +26,7 @@ const ARTIFACTS = [
      ╰─────────────╯</span>`;
     },
     text:'in die wand gewachsen. nicht hineingehauen — gewachsen. eine iris, die sich dreht wenn du die hand ausstreckst. als du es herausreißt, siehst du einen moment lang alle korridore dieser ebene gleichzeitig. dann bist du wieder hier.',
-    madness: 18
+    madness: 18, curse: 'stimmen'
   },
   {
     id:'echo', name:'DAS ECHO',
@@ -44,7 +44,7 @@ const ARTIFACTS = [
    ╰───────────╯</span>`;
     },
     text:'eine hohle kugel aus einem material das weder knochen noch stein ist. wenn du dein ohr anlegst, hörst du deine eigene stimme — aber nicht sätze die du erinnerst. älter. als ob du schon früher hier gewesen bist.',
-    madness: 22
+    madness: 22, curse: 'erschöpfung'
   },
   {
     id:'abdruck', name:'DER ABDRUCK',
@@ -60,7 +60,7 @@ const ARTIFACTS = [
  ╲     PALM LINE 3    ╱
   ╰────────────────────╯</span>`,
     text:'ein handabdruck im fels. nicht auf den fels gepresst — hineingewachsen. du steckst deine hand hinein. er passt. der stein ist warm. das warst du. das bist du. du bist schon hier gewesen.',
-    madness: 26
+    madness: 26, curse: 'hunger'
   },
   {
     id:'gleichung', name:'DIE GLEICHUNG',
@@ -79,7 +79,7 @@ const ARTIFACTS = [
 ╚══════════════════════╝</span>`;
     },
     text:'eine metallplatte mit einer gleichung. du verstehst die symbole nicht. dann plötzlich doch. sie beschreibt etwas — nicht mathematisch, sondern ontologisch. du kannst nicht aufhören, sie zu verstehen.',
-    madness: 30
+    madness: 30, curse: 'blutung'
   },
   {
     id:'kern', name:'DER KERN',
@@ -397,6 +397,57 @@ const BASE_EVENTS = [
     ]
   },
   {
+    id: 'händler',
+    title: 'EIN ANGEBOT',
+    body: 'ein tisch aus trümmern. darauf: ressourcen. daneben: jemand der wartet und nicht erklärt.',
+    art: `<span class="ga">  ┌─────────────┐
+  │  [?] → [?]  │
+  └─────────────┘</span>`,
+    logCol: 'amber', once: false,
+    choices: [
+      { label: '[ handeln ]', cls: 'amb',
+        effect: () => {
+          const trades = [
+            {give:'holz',   gAmt:5, take:'metall',  tAmt:3},
+            {give:'stoff',  gAmt:4, take:'holz',    tAmt:6},
+            {give:'nahrung',gAmt:5, take:'stoff',   tAmt:4},
+            {give:'metall', gAmt:3, take:'nahrung', tAmt:6},
+            {give:'holz',   gAmt:7, take:'stoff',   tAmt:5},
+            {give:'nahrung',gAmt:4, take:'metall',  tAmt:2},
+          ];
+          const t = trades[Math.floor(Math.random()*trades.length)];
+          if (G.res[t.give] < t.gAmt) return `zu wenig ${t.give}. der händler nickt und wartet.`;
+          G.res[t.give] -= t.gAmt; G.res[t.take] = Math.min(G.res[t.take]+t.tAmt,200);
+          return `${t.gAmt} ${t.give} gegen ${t.tAmt} ${t.take}. fair.`;
+        }, outcomeCol: 'amber' },
+      { label: '[ ablehnen ]', cls: '',
+        effect: () => {}, outcome: 'er nickt. beim nächsten mal vielleicht.', outcomeCol: null },
+    ]
+  },
+  {
+    id: 'fremder_sammler',
+    title: 'JEMAND AN DER TÜR',
+    body: 'ein klopfen. vorsichtig. als ob derjenige nicht sicher ist ob er stören darf. draußen steht jemand mit leeren händen und einem müden gesicht.',
+    art: `<span class="gd">     ╭───╮
+     │ · │
+  ───┤   ├───
+     │   │
+     ╰───╯</span>`,
+    logCol: null, once: true,
+    choices: [
+      { label: '[ reinlassen ]', cls: 'know',
+        effect: () => {
+          const slots = getSurvivorSlots();
+          if (G.survivors.length >= slots) return 'kein platz. unterkunft bauen.';
+          G.survivors.push({ type: 'sammler' });
+          return 'er bleibt. er fängt sofort an zu suchen. der SAMMLER ist jetzt in der basis.';
+        }, outcomeCol: 'green' },
+      { label: '[ wegschicken ]', cls: 'red',
+        effect: () => { G.res.holz = Math.min(G.res.holz + 3, 200);
+          return 'er lässt holz da bevor er geht. 3 holz.'; }, outcomeCol: null },
+    ]
+  },
+  {
     id: 'tropfen',
     title: 'TROPFENGERÄUSCH',
     body: 'rhythmisch. regelmäßig. irgendwo tropft flüssigkeit. du findest die quelle — eine aufgebrochene leitung.',
@@ -422,6 +473,127 @@ const BASE_EVENTS = [
   },
 ];
 
+
+// ================================================================
+// CURSES
+// ================================================================
+const CURSE_DEFS = {
+  stimmen:     { name:'STIMMEN',     sym:'◉', desc:'das auge zeigt dir zu viel. wahnsinn steigt.',
+                 tickInterval:60,  effect:()=>{ G.wahnsinn=Math.min(100,G.wahnsinn+1); } },
+  erschöpfung: { name:'ERSCHÖPFUNG',sym:'≈', desc:'das echo erschöpft dich. heilung vermindert.',
+                 passive:true },  // handled in doRest
+  hunger:      { name:'HUNGER',      sym:'▽', desc:'der abdruck verbraucht dich. nahrung schwindet.',
+                 tickInterval:30,  effect:()=>{ G.res.nahrung=Math.max(0,G.res.nahrung-1); } },
+  blutung:     { name:'BLUTUNG',     sym:'✗', desc:'die gleichung läuft durch dich. HP sinkt langsam.',
+                 tickInterval:20,  effect:()=>{ if(G.player.hp>1) G.player.hp=Math.max(1,G.player.hp-1); } },
+};
+
+// ================================================================
+// SYNERGIES
+// ================================================================
+const SYNERGY_CHECKS = [
+  { needs:['auge','echo'],
+    text:'das auge und das echo resonieren. du siehst dich selbst von außen. +1 DEF.',
+    effect:()=>{ G.player.def+=1; } },
+  { needs:['echo','abdruck'],
+    text:'das echo kennt den abdruck. du erkennst die stimmen als deine eigenen. wahnsinn −8%.',
+    effect:()=>{ G.wahnsinn=Math.max(0,G.wahnsinn-8); } },
+  { needs:['auge','gleichung'],
+    text:'das auge liest die gleichung. beide verstummen gleichzeitig. +2 ATK.',
+    effect:()=>{ G.player.atk+=2; } },
+  { needs:['abdruck','gleichung'],
+    text:'abdruck und gleichung. du kennst die formel deiner eigenen form. maxHP +8.',
+    effect:()=>{ G.player.maxHp+=8; G.player.hp+=8; } },
+  { needs:['auge','echo','abdruck','gleichung'],
+    text:'vier relikte. du bist vollständig unvollständig. alle flüche schwächen sich ab.',
+    effect:()=>{ G.curses=[]; } },
+];
+
+// ================================================================
+// COMPANION DIALOGUES
+// ================================================================
+const COMPANION_LINES = {
+  schmied:   ['das metall hier hat eine komische zusammensetzung.','ich habe noch nie stahl wie diesen gesehen.','mit dem richtigen werkzeug wäre alles möglich.','sag mir wenn du mehr brauchst.'],
+  heiler:    ['trink mehr. es hilft nicht, aber es hilft.','diese wände machen krank.','du siehst besser aus. relativ gesehen.','schlaf wenn du kannst.'],
+  wächter:   ['ich habe heute nacht etwas gehört. ich erzähle es dir nicht.','alles ruhig. soweit.','ich halte wache. geh schlafen.','nichts bewegt sich. noch.'],
+  sammler:   ['unter dem schacht: mehr holz. ich habe es schon geholt.','der sektor ost gibt nichts mehr her.','ich glaube wir sind nicht alleine hier.','es wird knapp.'],
+  kartograf: ['der gang nach links biegt falsch ab.','ich habe diese struktur anderswo gesehen.','die karten stimmen nicht mit der realität überein.','ebene drei ist nicht wo sie sein sollte.'],
+};
+
+// ================================================================
+// SURVIVORS
+// ================================================================
+const SURVIVOR_DEFS = {
+  schmied:   { name:'SCHMIED',    role:'metallbearbeitung', desc:'kann metall formen. waffen. rüstung. dinge die standhalten.' },
+  heiler:    { name:'HEILER',     role:'medizin',           desc:'kennt kräuter. verbessert heilung. hält dich länger am leben.' },
+  wächter:   { name:'WÄCHTER',    role:'wache',             desc:'hält die stellung. du kämpfst mit mehr rückhalt. DEF +2.' },
+  sammler:   { name:'SAMMLER',    role:'beschaffung',       desc:'durchsucht trümmer ohne pause. ressourcen kommen von selbst.' },
+  kartograf: { name:'KARTOGRAF',  role:'navigation',        desc:'hat die strukturen im kopf. der grundriss ist beim betreten sichtbar.' },
+};
+
+const PILZ_WHISPERS = [
+  'die pilze erinnern sich.','sie wuchsen hier bevor du kamst.','unter dem boden ist mehr.',
+  'die sporen kennen deinen weg.','sie haben gedächtnis.','alles ist verbunden.',
+];
+
+// ================================================================
+// FUNK EVENTS (Funkkabine transmissions)
+// ================================================================
+const FUNK_EVENTS = [
+  {
+    id: 'signal_koordinaten',
+    title: 'SIGNAL: KOORDINATEN',
+    body: 'frequenzrauschen. dann zahlen. eine koordinate, die keinen ort auf keiner karte markiert.',
+    art: `<span class="gd">  ╔══════════════╗
+  ║ ·─·─·─·─·─· ║
+  ║ 47.3 // 9.1 ║
+  ╚══════════════╝</span>`,
+    logCol: 'know', once: false,
+    choices: [
+      { label: '[ aufzeichnen ]', cls: 'know',
+        effect: () => { G.wahnsinn = Math.min(100, G.wahnsinn + 4); G.player.def += 1;
+          return 'du verstehst die bedeutung. irgendwie. +1 DEF, +4% wahnsinn.'; }, outcomeCol: 'know' },
+      { label: '[ ignorieren ]', cls: '',
+        effect: () => { G.res.metall = Math.min(G.res.metall + 3, 200);
+          return 'du baust die antenne teilweise ab. 3 metall.'; }, outcomeCol: null },
+    ]
+  },
+  {
+    id: 'signal_stimme',
+    title: 'SIGNAL: STIMME',
+    body: 'eine menschliche stimme. klar. ruhig. sie liest eine liste vor. dein name ist nicht dabei. aber die beschreibung passt.',
+    art: '',
+    logCol: null, once: true,
+    choices: [
+      { label: '[ zuhören ]', cls: '',
+        effect: () => { const h = Math.floor(G.player.maxHp * 0.2);
+          G.player.hp = Math.min(G.player.maxHp, G.player.hp + h);
+          return `die stimme beruhigt dich. +${h} HP.`; }, outcomeCol: 'green' },
+      { label: '[ unterbrechen ]', cls: 'red',
+        effect: () => { G.wahnsinn = Math.min(100, G.wahnsinn + 8); G.res.metall = Math.min(G.res.metall + 6, 200);
+          return 'du störst die übertragung. 6 metall. die stille danach ist schlimmer.'; }, outcomeCol: 'red' },
+    ]
+  },
+  {
+    id: 'signal_muster',
+    title: 'SIGNAL: MUSTER',
+    body: 'kein ton. kein wort. nur ein rhythmisches muster das sich alle 17 sekunden wiederholt. du fängst an es zu erkennen.',
+    art: '',
+    logCol: 'amber', once: false,
+    choices: [
+      { label: '[ das muster notieren ]', cls: 'amb',
+        effect: () => {
+          const res = ['holz','stoff','nahrung'][Math.floor(Math.random()*3)];
+          const amt = 3 + Math.floor(Math.random()*4);
+          G.res[res] = Math.min(G.res[res] + amt, 200);
+          return `das muster führt zu etwas. +${amt} ${res}.`;
+        }, outcomeCol: 'amber' },
+      { label: '[ gerät ausschalten ]', cls: '',
+        effect: () => { G.wahnsinn = Math.max(0, G.wahnsinn - 6);
+          return 'stille. wahnsinn −6%.'; }, outcomeCol: null },
+    ]
+  },
+];
 
 // ================================================================
 // MADNESS EFFECTS

@@ -1,11 +1,22 @@
 'use strict';
 
 // ================================================================
+// JOURNAL
+// ================================================================
+function journalAdd(text) {
+  const t = Math.floor(G.time);
+  const ts = `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+  G.journal.unshift(`[${ts}] ${text}`);
+  if (G.journal.length > 20) G.journal.pop();
+}
+
+// ================================================================
 // DESCEND TO NEXT FLOOR
 // ================================================================
 function descendFloor() {
   G.floor++;
   log(`— abstieg: ebene ${G.floor+1} —`, 'green');
+  journalAdd(`abstieg zu ebene ${G.floor+1}`);
 
   if (G.floor >= ARTIFACTS.length) {
     triggerEnding();
@@ -49,7 +60,8 @@ function showArtifactEvent(artDef, onDone) {
     log(`〔 RELIKT GEFUNDEN: ${artDef.name} 〕`, 'know');
   } else {
     document.getElementById('ev-ov').classList.remove('on');
-    triggerEnding();
+    if (G.wahnsinn >= 90) triggerAltEnding();
+    else triggerEnding();
   }
 }
 
@@ -59,12 +71,31 @@ function closeArtifactEvent() {
   G.eventPending = false;
 
   G.wahnsinn = Math.min(100, G.wahnsinn + artDef.madness);
-  log(`wahnsinn +${artDef.madness}%.`, 'know');
+  if (artDef.madness > 0) log(`wahnsinn +${artDef.madness}%.`, 'know');
+
+  // Fluch anwenden
+  if (artDef.curse && !G.curses.find(c => c.type === artDef.curse)) {
+    G.curses.push({ type: artDef.curse });
+    const cd = CURSE_DEFS[artDef.curse];
+    log(`fluch: ${cd.name}. ${cd.desc}`, 'red');
+    journalAdd(`fluch erhalten: ${cd.name}`);
+  }
+
+  // Synergie-Prüfung
+  for (const syn of SYNERGY_CHECKS) {
+    if (G.unlocked['syn_' + syn.needs.join('')]) continue;
+    if (!syn.needs.every(id => G.collectedArtifacts.includes(id))) continue;
+    G.unlocked['syn_' + syn.needs.join('')] = true;
+    syn.effect();
+    log(`〔 SYNERGIE: ${syn.text} 〕`, 'know');
+    journalAdd(`synergie: ${syn.needs.join(' + ')}`);
+  }
 
   if (G.collectedArtifacts.length > 0) {
     document.getElementById('artifact-sec').style.display = 'block';
   }
 
+  journalAdd(`relikt gefunden: ${artDef.name}`);
   if (window._evCallback) { window._evCallback(); window._evCallback = null; }
 }
 
@@ -99,6 +130,53 @@ function triggerEnding() {
 }
 
 
+
+function triggerAltEnding() {
+  setTimeout(() => {
+    const altArt = `<span style="color:var(--horror)">  ░░░╭───────────────────╮░░░
+░░╱  ╭─────────────╮  ╲░░
+░│  ╱   ҉ ҉ ҉ ҉ ҉   ╲  │░
+░│ │   ҉ ◉ ◉ ◉ ҉   │ │░
+░│ │   ҉ ҉ ҉ ҉ ҉     │ │░
+░│  ╲               ╱  │░
+░░╲  ╰─────────────╯  ╱░░
+  ░░░╰───────────────────╯░░░</span>`;
+
+    document.getElementById('end-art').innerHTML = altArt;
+    document.getElementById('end-title').textContent = 'ANGEKOMMEN';
+    document.getElementById('end-title').style.color = 'var(--horror)';
+    document.getElementById('end-title').style.textShadow = '0 0 20px var(--red)';
+    document.getElementById('end-body').innerHTML =
+      `du hältst den kern. du bist der kern.<br><br>
+       die flüche waren keine strafe.<br>
+       sie waren eine einladung.<br><br>
+       die anderen die hinabgestiegen sind<br>
+       und nicht zurückgekehrt —<br>
+       du kennst sie jetzt. sie kennen dich.<br><br>
+       <span style="color:var(--horror);text-shadow:0 0 12px var(--red)">du bist das labyrinth geworden.</span>`;
+
+    document.getElementById('end-ov').classList.add('on');
+    log('— du bist angekommen —', 'red');
+  }, 400);
+}
+
+// ================================================================
+// CURSES RENDERING
+// ================================================================
+function renderCurses() {
+  const sec = document.getElementById('curses-sec');
+  if (!sec) return;
+  if (G.curses.length === 0) { sec.style.display='none'; return; }
+  sec.style.display = 'block';
+  sec.innerHTML = `<div class="sdiv">// flüche</div>` +
+    G.curses.map(c => {
+      const def = CURSE_DEFS[c.type];
+      return `<div style="font-size:10px;padding:2px 0;color:var(--red2)">
+        <span style="opacity:.7">${def.sym}</span> ${def.name}
+        <div style="font-size:9px;color:var(--dim)">${def.desc}</div>
+      </div>`;
+    }).join('');
+}
 
 // ================================================================
 // STATS & RESOURCES RENDERING
@@ -145,6 +223,9 @@ function renderStats() {
       <div class="res"><span class="rn">WAFFE</span><span class="rv" style="font-size:10px;color:var(--amber)">${p.weapon||'—'}</span></div>`;
   }
 
+  // Curses (inline in renderStats for live refresh)
+  if (G.curses.length > 0) renderCurses();
+
   // Artifacts
   if (G.collectedArtifacts.length > 0) {
     document.getElementById('artifact-list').innerHTML =
@@ -181,6 +262,11 @@ function updateFooter() {
   const t = Math.floor(G.time);
   document.getElementById('ft-time').textContent =
     `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+  // Schicht-Anzeige: alle 5 Minuten eine neue Schicht
+  const schicht = Math.floor(G.time / 300) + 1;
+  const phase = ['○','◑','●','◕'][Math.floor(G.time / 75) % 4];
+  const sd = document.getElementById('ft-shift');
+  if (sd) { sd.textContent = `${phase} sch. ${schicht}`; }
   if (G.phase==='base') renderBaseArt();
 }
 

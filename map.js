@@ -130,6 +130,13 @@ function renderMap() {
       case 'stairs':   return `<span class="gg pulseg">▼</span>`;
       case 'enemy':    return room.cleared ? `<span class="gd">·</span>` : `<span class="gr pulser">!</span>`;
       case 'loot':     return room.looted  ? `<span class="gd">·</span>` : `<span class="ga">◇</span>`;
+      case 'mushroom':      return room.cleared ? `<span class="gd">·</span>` : `<span class="ga pulsea">⁂</span>`;
+      case 'wasserleitung': return room.cleared ? `<span class="gd">·</span>` : `<span class="gc">○</span>`;
+      case 'schlafkammer':  return room.cleared ? `<span class="gd">·</span>` : `<span class="gd">⌂</span>`;
+      case 'funkkabine':    return room.cleared ? `<span class="gd">·</span>` : `<span class="gk pulsek">⊕</span>`;
+      case 'waffenlager':   return room.cleared ? `<span class="gd">·</span>` : `<span class="gr">⚔</span>`;
+      case 'survivor':      return room.cleared ? `<span class="gd">·</span>` : `<span class="gg pulseg">✦</span>`;
+      case 'rückblick':     return room.cleared ? `<span class="gd">·</span>` : `<span class="gk">◎</span>`;
       case 'empty':    return `<span class="gd">·</span>`;
       default:         return `<span class="gd">·</span>`;
     }

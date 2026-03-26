@@ -1,14 +1,14 @@
 :root {
   --bg:     #020408;
   --bg2:    #050810;
-  --text:   #a0aebb;
-  --dim:    #4a5260;
+  --text:   #b8c8d8;
+  --dim:    #647888;
   --dim2:   #0e1218;
   --green:  #48c070;
   --teal:   #206050;
   --red:    #d03038;
   --red2:   #ff5058;
-  --horror: #480010;
+  --horror: #c03040;
   --amber:  #b87820;
   --know:   #6840b8;
   --know2:  #a070f0;
@@ -189,9 +189,11 @@ body{
 @keyframes pulse-r{0%,100%{text-shadow:0 0 7px var(--red)}50%{text-shadow:0 0 18px var(--red2),0 0 35px var(--horror)}}
 @keyframes pulse-k{0%,100%{text-shadow:0 0 8px var(--know)}50%{text-shadow:0 0 20px var(--know2),0 0 40px var(--know)}}
 @keyframes pulse-g{0%,100%{text-shadow:0 0 8px var(--green)}50%{text-shadow:0 0 20px var(--green),0 0 40px rgba(72,192,112,.3)}}
+@keyframes pulse-a{0%,100%{text-shadow:0 0 6px var(--amber)}50%{text-shadow:0 0 18px var(--amber),0 0 35px rgba(184,120,32,.4)}}
 @keyframes madpulse{0%,100%{opacity:.9}50%{opacity:.5}}
 .blink{animation:blink 1s step-end infinite;}
 .pulseg{animation:pulse-g 2.5s ease-in-out infinite;}
 .pulsek{animation:pulse-k 2.5s ease-in-out infinite;}
 .pulser{animation:pulse-r 1.8s ease-in-out infinite;}
+.pulsea{animation:pulse-a 3s ease-in-out infinite;}
 .madpulse{animation:madpulse 3s ease-in-out infinite;}

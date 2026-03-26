@@ -28,7 +28,13 @@ function renderBaseActions() {
   }
   if (G.buildings.lagerfeuer.count > 0) {
     const canHeal = G.player.hp < G.player.maxHp;
-    h += `<button class="btn${canHeal ? '' : ''}" ${canHeal ? '' : 'disabled'} onclick="doRest()">[ rasten ]</button>`;
+    h += `<button class="btn" ${canHeal ? '' : 'disabled'} onclick="doRest()">[ rasten ]</button>`;
+  }
+  if (G.baseRooms.funkkabine) {
+    h += `<button class="btn know" onclick="doFunk()">[ funk durchsuchen ]</button>`;
+  }
+  if (G.leuchtsporen > 0) {
+    h += `<button class="btn amb" style="font-size:9px" disabled>[ leuchtsporen ×${G.leuchtsporen} — im labor. verwenden ]</button>`;
   }
   if (G.unlockedExplore) {
     h += `<button class="btn" onclick="enterLabyrinth()">[ labyrinth betreten ]</button>`;
@@ -37,36 +43,45 @@ function renderBaseActions() {
 }
 
 function doSearch() {
-  const base = 2 + G.player.lvl;
-  const metAmt = base + Math.floor(Math.random() * 3);
-  G.res.metall = Math.min(G.res.metall + metAmt, 200);
-
-  // Secondary resource drops
+  // Frühes Spiel: primär Holz/Stoff, Metall selten
   const roll = Math.random();
-  let extra = '';
-  if (roll < 0.30) {
-    const h = 1 + Math.floor(Math.random() * 3);
+  let primary = '';
+  if (roll < 0.42) {
+    const h = 2 + Math.floor(Math.random() * 3);
     G.res.holz = Math.min(G.res.holz + h, 200);
-    extra = `, ${h} holz`;
-  } else if (roll < 0.52) {
+    primary = `${h} holz`;
+  } else if (roll < 0.72) {
     const s = 1 + Math.floor(Math.random() * 2);
     G.res.stoff = Math.min(G.res.stoff + s, 200);
-    extra = `, ${s} stoff`;
-  } else if (roll < 0.62) {
+    primary = `${s} stoff`;
+  } else if (roll < 0.88) {
     const n = 1 + Math.floor(Math.random() * 2);
     G.res.nahrung = Math.min(G.res.nahrung + n, 200);
-    extra = `, ${n} nahrung`;
+    primary = `${n} nahrung`;
+  } else {
+    // Metall: selten, aber vorhanden
+    const m = 1 + Math.floor(Math.random() * 3);
+    G.res.metall = Math.min(G.res.metall + m, 200);
+    primary = `${m} metall`;
+  }
+
+  // Kleiner Sekundär-Drop
+  let extra = '';
+  if (Math.random() < 0.25) {
+    const sec = ['holz','stoff','nahrung'][Math.floor(Math.random()*3)];
+    G.res[sec] = Math.min(G.res[sec] + 1, 200);
+    extra = `, 1 ${sec}`;
   }
 
   const msgs = [
-    'rohre. schrauben. ein rest von etwas das einmal funktioniert hat.',
-    'armierungsstahl. verwertbar.',
-    'jemand hat hier werkzeuge zurückgelassen.',
-    'trümmer. alles hat einen preis.',
-    'das metall ist kalt. es war schon lange hier.',
-    'unter dem schutt: holz. imprägniert und alt.',
+    'balken und bretter. irgendwer hat hier gebaut.',
     'fetzen stoff. zu dunkel um die farbe zu erkennen.',
     'eine konservenbüchse. das etikett fehlt.',
+    'trümmer. alles hat einen preis.',
+    'jemand hat hier gelebt. ein rest davon.',
+    'rohre. schrauben. ein rest von etwas das einmal funktioniert hat.',
+    'unter dem schutt: holz. imprägniert und alt.',
+    'das metall ist kalt. es war schon lange hier.',
   ];
   if (Math.random() < 0.4) log(msgs[Math.floor(Math.random()*msgs.length)], null);
 
@@ -80,11 +95,92 @@ function doRest() {
   if (G.player.hp >= G.player.maxHp) {
     log('keine verletzungen. rast unnötig.', null); return;
   }
-  const heal = 5 + Math.floor(G.player.lvl * 1.5);
+  let heal = 5 + Math.floor(G.player.lvl * 1.5);
+  if (G.baseRooms.schlafkammer) heal = Math.floor(heal * 1.5);
+  if (hasSurvivor('heiler')) heal = Math.floor(heal * 1.4);
   G.player.hp = Math.min(G.player.maxHp, G.player.hp + heal);
-  log(`rast. +${heal} HP. (${G.player.hp}/${G.player.maxHp})`, 'green');
+  const bonusNote = (G.baseRooms.schlafkammer || hasSurvivor('heiler')) ? ' (verbessert)' : '';
+  log(`rast. +${heal} HP${bonusNote}. (${G.player.hp}/${G.player.maxHp})`, 'green');
   renderStats();
   renderBaseActions();
+}
+
+// ================================================================
+// SURVIVORS
+// ================================================================
+function renderSurvivors() {
+  const sec = document.getElementById('survivor-sec');
+  if (!sec) return;
+  const slots = getSurvivorSlots();
+  const free = slots - G.survivors.length;
+  let html = `<div class="csec-title">// überlebende</div>`;
+  html += `<div style="font-size:9px;color:var(--dim);margin-bottom:6px">unterkunft: ${G.survivors.length}/${slots} belegt</div>`;
+  for (const s of G.survivors) {
+    const def = SURVIVOR_DEFS[s.type];
+    html += `<div style="font-size:10px;margin-bottom:4px;padding:4px 2px;border-bottom:1px solid var(--dim2)">
+      <span style="color:var(--green)">${def.name}</span>
+      <span style="font-size:9px;color:var(--dim)"> · ${def.role}</span><br>
+      <span style="font-size:9px;color:var(--dim)">${def.desc}</span>
+    </div>`;
+  }
+  if (free > 0) {
+    html += `<div style="font-size:9px;color:var(--dim);font-style:italic">${free} platz frei. überlebende warten im labyrinth.</div>`;
+  }
+  sec.innerHTML = html;
+}
+
+function doFunk() {
+  if (G.eventPending) return;
+  const pool = FUNK_EVENTS.filter(e => !e.once || !G.unlocked['ev_' + e.id]);
+  if (!pool.length) { log('keine signale. nur rauschen.', 'know'); return; }
+  const ev = pool[Math.floor(Math.random() * pool.length)];
+  G.eventCooldown = 8;
+  fireBaseEvent(ev);
+}
+
+// ================================================================
+// PILZKAMMER
+// ================================================================
+function renderPilzraum() {
+  const sec = document.getElementById('pilzraum-sec');
+  if (!sec || !G.pilzraum) return;
+  const cd = G.pilzCooldown;
+  const btn = cd > 0
+    ? `<button class="btn" disabled style="color:var(--dim)">[ ernte — bereit in ${Math.ceil(cd/2)}s ]</button>`
+    : `<button class="btn amb" onclick="harvestPilze()">[ pilze ernten ]</button>`;
+  sec.innerHTML = `<div class="csec-title">// pilzkammer</div>
+<div style="font-size:9px;color:var(--dim);margin-bottom:6px">die pilze wachsen langsam zurück. geduld.</div>
+${btn}`;
+}
+
+function harvestPilze() {
+  if (G.pilzCooldown > 0) return;
+  G.pilzCooldown = 40; // 20 Sekunden
+  const n = 3 + Math.floor(Math.random() * 3);
+  G.res.nahrung = Math.min(G.res.nahrung + n, 200);
+  let extra = '';
+  if (Math.random() < 0.35) {
+    const s = 1 + Math.floor(Math.random() * 2);
+    G.res.stoff = Math.min(G.res.stoff + s, 200);
+    extra += `, ${s} stoff`;
+  }
+  if (Math.random() < 0.2) {
+    G.wahnsinn = Math.max(0, G.wahnsinn - 5);
+    extra += ', wahnsinn −5%';
+  }
+  if (Math.random() < 0.08) {
+    G.leuchtsporen++;
+    extra += ', leuchtsporen ×1';
+    renderBaseActions();
+  }
+  const msgs = [
+    `pilze geerntet. +${n} nahrung${extra}. der geruch bleibt an dir.`,
+    `du greifst in die schicht. +${n} nahrung${extra}. sie wachsen schneller als erwartet.`,
+    `ernte. +${n} nahrung${extra}. etwas pulsiert wenn du die hand zurückziehst.`,
+  ];
+  log(msgs[Math.floor(Math.random() * msgs.length)], 'green');
+  renderStats();
+  renderPilzraum();
 }
 
 // ================================================================
@@ -97,8 +193,8 @@ function renderBuild() {
       html += `<span style="font-size:11px;color:var(--green)">✓ ${b.label}</span>`;
       continue;
     }
-    // lagerfeuer only after werkbank
     if (key === 'lagerfeuer' && !G.buildings.werkbank.count) continue;
+    if (key === 'unterkunft' && !G.buildings.lagerfeuer.count) continue;
     const can = canAfford(b.cost);
     html += `<button class="btn ${can?'amb':''}" onclick="doBuild('${key}')"
       style="text-align:left;padding:7px 10px;line-height:1.7;width:165px">
@@ -127,6 +223,11 @@ function renderCraft() {
   list.innerHTML = Object.entries(G.craftItems).map(([key, ci]) => {
     if (ci.built >= ci.maxBuild)
       return `<span style="font-size:11px;color:var(--dim)">✓ ${ci.label}</span>`;
+    if (ci.requiresSurvivor && !hasSurvivor(ci.requiresSurvivor)) return '';
+    if (ci.requiresBaseRoom === 'pilzraum' && !G.pilzraum) return '';
+    if (ci.requiresBaseRoom === 'waffenlager' && !G.baseRooms.waffenlager) return '';
+    const hasAny = Object.keys(ci.cost).some(r => (G.res[r] || 0) > 0);
+    if (!hasAny) return '';
     const can = canAfford(ci.cost);
     return `<button class="btn" onclick="doCraft('${key}')"
       style="text-align:left;padding:7px 10px;line-height:1.7;width:165px">

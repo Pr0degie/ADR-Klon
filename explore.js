@@ -7,14 +7,70 @@
 function enterLabyrinth() {
   G.phase = 'explore';
   G.map   = generateFloor(G.floor);
-  G.artifactFound = false;
+  G.artifactFound = G.floorsCleared.includes(G.floor);
 
-  document.getElementById('base-art').style.display      = 'none';
-  document.getElementById('zeichen-section').style.display = 'none';
-  document.getElementById('scene-desc').style.display    = 'none';
-  document.getElementById('actions').style.display       = 'none';
-  document.getElementById('craft-section').style.display = 'none';
-  document.getElementById('map-wrap').style.display      = 'flex';
+  // Artefakt bereits genommen: Raumzustand wiederherstellen + Treppe setzen
+  if (G.artifactFound) {
+    const fm = G.map;
+    fm.grid.forEach(row => row.forEach(cell => {
+      if (cell && cell.content === 'artifact') cell.cleared = true;
+    }));
+    const dist = bfsDist(fm.pr, fm.pc,
+      fm.grid.flatMap((row,r) => row.map((cell,c) => cell ? {r,c} : null).filter(Boolean)),
+      fm.conns
+    );
+    let maxD=0, sr=fm.pr, sc=fm.pc;
+    fm.grid.forEach((row,r) => row.forEach((cell,c) => {
+      if (cell && !(r===fm.pr&&c===fm.pc)) {
+        const d = dist[`${r},${c}`] ?? 0;
+        if (d > maxD) { maxD=d; sr=r; sc=c; }
+      }
+    }));
+    fm.grid[sr][sc].content = 'stairs';
+    fm.grid[sr][sc].visited = true;
+  }
+
+  // Spezielle Räume pro Ebene spawnen
+  const specials = [
+    { floor:0, key:'pilzraum',     check:()=>!G.pilzraum,                content:'mushroom'     },
+    { floor:1, key:'wasserleitung',check:()=>!G.baseRooms.wasserleitung,  content:'wasserleitung'},
+    { floor:1, key:'surv_schmied', check:()=>!hasSurvivor('schmied'),     content:'survivor', survivorType:'schmied' },
+    { floor:2, key:'schlafkammer', check:()=>!G.baseRooms.schlafkammer,   content:'schlafkammer'},
+    { floor:2, key:'surv_heiler',  check:()=>!hasSurvivor('heiler'),      content:'survivor', survivorType:'heiler'  },
+    { floor:3, key:'funkkabine',   check:()=>!G.baseRooms.funkkabine,     content:'funkkabine'  },
+    { floor:3, key:'surv_wächter', check:()=>!hasSurvivor('wächter'),     content:'survivor', survivorType:'wächter' },
+    { floor:4, key:'waffenlager',  check:()=>!G.baseRooms.waffenlager,    content:'waffenlager' },
+    { floor:4, key:'surv_kartograf',check:()=>!hasSurvivor('kartograf'), content:'survivor', survivorType:'kartograf'},
+    { floor:4, key:'rückblick',   check:()=>!G.unlocked.rückblick,       content:'rückblick' },
+  ];
+  const m = G.map;
+  for (const sp of specials) {
+    if (sp.floor !== G.floor) continue;
+    if (!sp.check()) continue;
+    const candidates = [];
+    m.grid.forEach((row, r) => row.forEach((cell, c) => {
+      if (cell && (cell.content === 'loot' || cell.content === 'empty')) candidates.push({r, c});
+    }));
+    if (candidates.length > 0) {
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      m.grid[pick.r][pick.c].content = sp.content;
+      if (sp.survivorType) m.grid[pick.r][pick.c].survivorType = sp.survivorType;
+      candidates.splice(candidates.indexOf(pick), 1);
+    }
+  }
+  // Kartograf: Karte zu Beginn enthüllen
+  if (hasSurvivor('kartograf')) {
+    m.grid.forEach(row => row.forEach(cell => { if (cell) cell.visited = true; }));
+  }
+
+  document.getElementById('base-art').style.display        = 'none';
+  document.getElementById('zeichen-section').style.display  = 'none';
+  document.getElementById('scene-desc').style.display       = 'none';
+  document.getElementById('actions').style.display          = 'none';
+  document.getElementById('craft-section').style.display    = 'none';
+  document.getElementById('pilzraum-sec').style.display     = 'none';
+  document.getElementById('survivor-sec').style.display     = 'none';
+  document.getElementById('map-wrap').style.display         = 'flex';
 
   document.getElementById('map-floor-num').textContent = G.floor + 1;
   document.getElementById('floor-num').textContent     = G.floor + 1;
@@ -47,6 +103,14 @@ function returnToBase() {
   if (G.fackelAktiv) {
     document.getElementById('zeichen-section').style.display = 'block';
   }
+  if (G.pilzraum) {
+    document.getElementById('pilzraum-sec').style.display = 'block';
+    renderPilzraum();
+  }
+  if (G.survivors.length > 0) {
+    document.getElementById('survivor-sec').style.display = 'block';
+    renderSurvivors();
+  }
   document.getElementById('ft-phase').textContent = 'basis';
   document.getElementById('ft-room').style.display = 'none';
 
@@ -76,6 +140,17 @@ function renderRoomInfo() {
     case 'stairs':   desc = 'eine treppe nach unten. tiefer als du warst.'; break;
     case 'loot':     desc = room.looted ? 'ausgeraubt.' : 'reste. verwertbares metall.'; break;
     case 'enemy':    desc = room.cleared ? 'stille nach dem kampf.' : 'bewegung. etwas lebt hier.'; break;
+    case 'mushroom':      desc = room.cleared ? 'die pilze wurden gesichert. sie wachsen jetzt in deiner basis.' : 'der raum ist von pilzen überwachsen. biolumineszent. feucht. lebendig.'; break;
+    case 'wasserleitung': desc = room.cleared ? 'die leitung wurde repariert. wasser fließt zurück zur basis.' : 'eine aufgebrochene wasserleitung. noch intakt. reparierbar.'; break;
+    case 'schlafkammer':  desc = room.cleared ? 'die schlafkammer ist gesichert. erholung verbessert.' : 'feldbetten. decken. irgendwer hat hier lange geschlafen.'; break;
+    case 'funkkabine':    desc = room.cleared ? 'die funkkabine empfängt signale. manche sind echt.' : 'ein funktisch. eine antenne. die leuchte blinkt noch.'; break;
+    case 'waffenlager':   desc = room.cleared ? 'das waffenlager ist gesichert. erweiterte fertigung möglich.' : 'verschlossene schränke. schwerere ausrüstung. noch nutzbar.'; break;
+    case 'rückblick':     desc = room.cleared ? 'der weg nach innen.' : 'ein spiegel der nicht spiegelt. erinnerungen an der wand.'; break;
+    case 'survivor': {
+      const sdef = SURVIVOR_DEFS[room.survivorType] || {};
+      desc = room.cleared ? `${sdef.name||'unbekannt'} ist jetzt in der basis.` : `jemand versteckt sich hier. ${sdef.role ? sdef.role+'.' : ''}`;
+      break;
+    }
     case 'empty':    desc = EMPTY_FLAVORS[Math.abs(pr*7+pc*3+G.floor) % EMPTY_FLAVORS.length]; break;
   }
   document.getElementById('room-desc').textContent = desc;
@@ -89,6 +164,13 @@ function roomTypeName(content, room) {
   if (content==='artifact'&&!room.cleared) return 'artefakt';
   if (content==='stairs')                  return 'treppe';
   if (content==='loot'&&!room.looted)      return 'lager';
+  if (content==='mushroom'    &&!room.cleared) return 'pilzkammer';
+  if (content==='wasserleitung'&&!room.cleared) return 'wasserleitung';
+  if (content==='schlafkammer'&&!room.cleared) return 'schlafkammer';
+  if (content==='funkkabine'  &&!room.cleared) return 'funkkabine';
+  if (content==='waffenlager' &&!room.cleared) return 'waffenlager';
+  if (content==='rückblick'   &&!room.cleared) return 'rückblick';
+  if (content==='survivor'    &&!room.cleared) return (SURVIVOR_DEFS[room.survivorType]?.name||'überlebender').toLowerCase();
   return content || '?';
 }
 
@@ -128,6 +210,13 @@ function renderMoveButtons() {
   if (cur.content==='enemy' && !cur.cleared) {
     h += `<button class="btn red" onclick="fightRoom(${pr},${pc})">[ kampf ]</button>`;
   }
+  if (cur.content==='mushroom'     && !cur.cleared) h += `<button class="btn amb" onclick="claimPilzraum(${pr},${pc})">[ pilze sichern ]</button>`;
+  if (cur.content==='wasserleitung'&& !cur.cleared) h += `<button class="btn" onclick="claimBaseRoom(${pr},${pc},'wasserleitung')">[ leitung reparieren ]</button>`;
+  if (cur.content==='schlafkammer' && !cur.cleared) h += `<button class="btn" onclick="claimBaseRoom(${pr},${pc},'schlafkammer')">[ kammer sichern ]</button>`;
+  if (cur.content==='funkkabine'   && !cur.cleared) h += `<button class="btn know" onclick="claimBaseRoom(${pr},${pc},'funkkabine')">[ funk aktivieren ]</button>`;
+  if (cur.content==='waffenlager'  && !cur.cleared) h += `<button class="btn" onclick="claimBaseRoom(${pr},${pc},'waffenlager')">[ lager sichern ]</button>`;
+  if (cur.content==='survivor'     && !cur.cleared) h += `<button class="btn know" onclick="claimSurvivor(${pr},${pc})">[ ansprechen ]</button>`;
+  if (cur.content==='start' && G.leuchtsporen > 0) h += `<button class="btn amb" onclick="useLeuchtsporen()">[ leuchtsporen einsetzen ×${G.leuchtsporen} ]</button>`;
 
   btns.innerHTML = h;
 }
@@ -143,6 +232,12 @@ function movePlayer(r, c) {
       renderMapUI();
       renderRoomInfo();
       setTimeout(() => fightRoom(r,c), 200);
+      return;
+    }
+    if (room.content === 'rückblick' && !room.cleared) {
+      renderMapUI();
+      renderRoomInfo();
+      setTimeout(() => showRückblick(r,c), 300);
       return;
     }
   }
@@ -177,7 +272,8 @@ function takeArtifact(r, c) {
   const artDef  = ARTIFACTS[G.floor];
   room.cleared  = true;
   G.artifactFound = true;
-  G.collectedArtifacts.push(artDef.id);
+  if (!G.collectedArtifacts.includes(artDef.id)) G.collectedArtifacts.push(artDef.id);
+  if (!G.floorsCleared.includes(G.floor)) G.floorsCleared.push(G.floor);
 
   showArtifactEvent(artDef, () => {
     const m = G.map;
@@ -222,6 +318,87 @@ function fightRoom(r, c) {
   log(enemy.intro, 'red');
   updateCombatUI();
   setCombatMsg(enemy.intro, 'red');
+}
+
+function claimPilzraum(r, c) {
+  const room = G.map.grid[r][c]; if (room.cleared) return;
+  room.cleared = true;
+  G.pilzraum = true;
+  log('pilze gesichert. du weißt jetzt wie man sie kultiviert. sie werden in der basis gedeihen.', 'green');
+  renderMapUI(); renderRoomInfo();
+}
+
+function claimBaseRoom(r, c, type) {
+  const room = G.map.grid[r][c]; if (room.cleared) return;
+  if (type === 'wasserleitung') {
+    if (G.res.metall < 20) { log('wasserleitung: 20 metall benötigt.', 'red'); return; }
+    G.res.metall -= 20;
+    renderStats();
+  }
+  room.cleared = true;
+  G.baseRooms[type] = true;
+  const msgs = {
+    wasserleitung: 'wasserleitung repariert. 20 metall verbraucht. sie fließt zurück zur basis.',
+    schlafkammer:  'schlafkammer gesichert. erholung wird besser.',
+    funkkabine:    'funk aktiviert. signale aus der tiefe werden empfangen.',
+    waffenlager:   'waffenlager gesichert. der schmied kann mehr formen.',
+  };
+  log(msgs[type] || `${type} gesichert.`, 'green');
+  journalAdd(`${type} gesichert`);
+  renderMapUI(); renderRoomInfo();
+}
+
+function claimSurvivor(r, c) {
+  const room = G.map.grid[r][c]; if (room.cleared) return;
+  const type = room.survivorType;
+  const def = SURVIVOR_DEFS[type];
+  if (!def) return;
+  const slots = getSurvivorSlots();
+  if (G.survivors.length >= slots) {
+    log(`kein platz für ${def.name}. unterkunft bauen und zurückkehren.`, 'red');
+    return;
+  }
+  room.cleared = true;
+  G.survivors.push({ type });
+  if (type === 'wächter') G.player.def += 2;
+  log(`${def.name} schließt sich an. ${def.desc}`, 'green');
+  journalAdd(`${def.name} aufgenommen`);
+  renderMapUI(); renderRoomInfo();
+}
+
+function showRückblick(r, c) {
+  const room = G.map.grid[r][c]; if (room.cleared) return;
+  room.cleared = true;
+  G.unlocked.rückblick = true;
+  const entries = G.journal.slice(0, 10)
+    .map(j => `<div style="font-size:10px;color:var(--dim);margin:3px 0;border-bottom:1px solid var(--dim2);padding-bottom:3px">${j}</div>`)
+    .join('') || `<div style="font-size:10px;color:var(--dim)">keine aufzeichnungen.</div>`;
+  const stats = `<div style="font-size:9px;color:var(--dim);margin-top:8px">
+    ebenen: ${G.floor+1} · relikte: ${G.collectedArtifacts.length} · wahnsinn: ${Math.floor(G.wahnsinn)}% · flüche: ${G.curses.length}
+  </div>`;
+  document.getElementById('ev-art').innerHTML = '';
+  document.getElementById('ev-title').textContent = 'RÜCKBLICK';
+  document.getElementById('ev-body').innerHTML = entries + stats;
+  document.getElementById('ev-btns').innerHTML = `<button class="btn know" onclick="closeRückblick()">[ weitergehen ]</button>`;
+  window._activeBaseEvent = null;
+  G.eventPending = true;
+  document.getElementById('ev-ov').classList.add('on');
+  log('— rückblick —', 'know');
+  renderMapUI(); renderRoomInfo();
+}
+
+function closeRückblick() {
+  document.getElementById('ev-ov').classList.remove('on');
+  G.eventPending = false;
+}
+
+function useLeuchtsporen() {
+  if (G.leuchtsporen <= 0) return;
+  G.leuchtsporen--;
+  G.map.grid.forEach(row => row.forEach(cell => { if (cell) cell.visited = true; }));
+  log('leuchtsporen freigesetzt. der gesamte grundriss ist sichtbar.', 'amber');
+  renderBaseActions();
+  renderMapUI(); renderRoomInfo();
 }
 
 
