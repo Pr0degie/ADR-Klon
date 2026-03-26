@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>R'LYEH TERMINAL — ASCII Raycaster</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="container" tabindex="0">
+  <pre id="screen"></pre>
+  <div id="hud">
+    <div id="controls">WASD = Bewegen · Pfeile = Drehen · Q/E = Strafe</div>
+    <div id="sanity-bar">SAN ████████░░ 80%</div>
+  </div>
+</div>
+<div id="focus-hint">⛧ Ph'nglui mglw'nafh ⛧<br>[ KLICK ZUM STARTEN ]</div>
+
+<!-- Ladereihenfolge: constants → map → grid → input → player → raycast → render → minimap → hud → main -->
+<script src="js/constants.js"></script>
+<script src="js/map.js"></script>
+<script src="js/grid.js"></script>
+<script src="js/input.js"></script>
+<script src="js/player.js"></script>
+<script src="js/raycast.js"></script>
+<script src="js/render.js"></script>
+<script src="js/minimap.js"></script>
+<script src="js/hud.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

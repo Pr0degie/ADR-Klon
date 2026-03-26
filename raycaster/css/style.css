@@ -1,0 +1,118 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   COSMIC HORROR TERMINAL — Effulgence-inspirierter Glow-Stil
+   ══════════════════════════════════════════════════════════════════════════ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #020008;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: monospace;
+}
+
+/* CRT-Scanlines */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.2) 2px,
+    rgba(0,0,0,0.2) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Vignetten-Effekt */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
+  pointer-events: none;
+  z-index: 11;
+}
+
+#container {
+  position: relative;
+  padding: 20px 28px;
+  border: 1px solid #1a0a2e;
+  border-radius: 3px;
+  background: #03000a;
+  box-shadow:
+    0 0 60px rgba(88, 28, 135, 0.08),
+    0 0 120px rgba(20, 184, 166, 0.04),
+    inset 0 0 80px rgba(0, 0, 0, 0.6);
+  outline: none;
+}
+
+/* ── Render-Fläche ── */
+#screen {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 15px;
+  line-height: 1.15;
+  letter-spacing: 1.5px;
+  white-space: pre;
+  user-select: none;
+}
+
+#screen span {
+  transition: none;
+}
+
+/* ── HUD-Leiste ── */
+#hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #1a0a2e;
+}
+
+#controls {
+  color: #2d1b4e;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+#sanity-bar {
+  color: #7c3aed;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-shadow: 0 0 6px rgba(124, 58, 237, 0.4);
+}
+
+/* ── Fokus-Overlay ── */
+#focus-hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #7c3aed;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  text-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
+  z-index: 20;
+  animation: eldritch-blink 2s ease-in-out infinite;
+  pointer-events: none;
+  display: none;
+  text-align: center;
+  line-height: 1.8;
+}
+
+@keyframes eldritch-blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
