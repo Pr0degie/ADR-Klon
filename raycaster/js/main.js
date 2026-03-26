@@ -1,12 +1,17 @@
 // ============================================================================
 //  MAIN — Game Loop & Frame-Orchestrierung
 //  ─────────────────────────────────────────
-//  Einstiegspunkt. Verbindet alle Module und läuft den
-//  requestAnimationFrame-Loop.
+//  Einstiegspunkt. Verbindet alle Module.
+//  rcStart() / rcStop() steuern den Loop von außen.
 //
-//  Stellt bereit: renderFrame(), rcGameLoop()
+//  Stellt bereit: rcStart(), rcStop(), renderFrame()
 //  Benötigt: alles andere (wird per Script-Reihenfolge garantiert)
 // ============================================================================
+
+var rcRunning    = false;
+var _rcLastTime  = 0;
+var _rcRafId     = null;
+var _rcGridReady = false;
 
 /**
  * Einen kompletten Frame rendern.
@@ -75,9 +80,9 @@ function renderFrame(time) {
 // ============================================================================
 //  GAME LOOP
 // ============================================================================
-var _rcLastTime = 0;
 
 function rcGameLoop(timestamp) {
+  if (!rcRunning) return;
   var dt = Math.min((timestamp - _rcLastTime) / 1000, 0.05);
   _rcLastTime = timestamp;
   var time = timestamp / 1000;
@@ -85,9 +90,28 @@ function rcGameLoop(timestamp) {
   updatePlayer(dt);
   renderFrame(time);
 
-  requestAnimationFrame(rcGameLoop);
+  _rcRafId = requestAnimationFrame(rcGameLoop);
 }
 
-// ── Start ──
-initFocus();
-requestAnimationFrame(rcGameLoop);
+/** Raycaster starten (einmalig Grid initialisieren, dann Loop) */
+function rcStart() {
+  if (rcRunning) return;
+  if (!_rcGridReady) {
+    rcInitGrid();
+    _rcGridReady = true;
+  }
+  // Spielerposition zurücksetzen
+  rcPlayer.x   = 1.5;
+  rcPlayer.y   = 1.5;
+  rcPlayer.dir = 0;
+  rcRunning    = true;
+  _rcLastTime  = 0;
+  if (typeof initFocus === 'function') initFocus();
+  _rcRafId = requestAnimationFrame(rcGameLoop);
+}
+
+/** Raycaster stoppen */
+function rcStop() {
+  rcRunning = false;
+  if (_rcRafId) { cancelAnimationFrame(_rcRafId); _rcRafId = null; }
+}

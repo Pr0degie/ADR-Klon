@@ -6,7 +6,7 @@
 //
 //  Stellt bereit: renderMinimap()
 //  Benötigt: SCREEN_W, MINIMAP_SIZE, COLORS (constants.js),
-//            MAP, MAP_W, MAP_H (map.js), rcPlayer (player.js),
+//            RC_MAP, RC_MAP_W, RC_MAP_H (map.js), rcPlayer (player.js),
 //            setCell() (grid.js)
 // ============================================================================
 
@@ -51,8 +51,8 @@ function renderMinimap() {
         color = COLORS.mapPlayer;
       }
       // In der Map?
-      else if (wx >= 0 && wx < MAP_W && wy >= 0 && wy < MAP_H) {
-        var cell = MAP[wy][wx];
+      else if (wx >= 0 && wx < RC_MAP_W && wy >= 0 && wy < RC_MAP_H) {
+        var cell = RC_MAP[wy][wx];
         if (cell === 1)      { ch = '█'; color = COLORS.mapWall; }
         else if (cell === 2) { ch = '▓'; color = COLORS.mapEld; }
         else                  { ch = '·'; color = COLORS.mapFloor; }

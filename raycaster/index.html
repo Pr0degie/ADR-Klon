@@ -7,14 +7,14 @@
 </head>
 <body>
 
-<div id="container" tabindex="0">
-  <pre id="screen"></pre>
-  <div id="hud">
-    <div id="controls">WASD = Bewegen · Pfeile = Drehen · Q/E = Strafe</div>
-    <div id="sanity-bar">SAN ████████░░ 80%</div>
+<div id="rc-container" tabindex="0">
+  <pre id="rc-screen"></pre>
+  <div id="rc-hud">
+    <div id="rc-controls">WASD = Bewegen · Pfeile = Drehen · Q/E = Strafe</div>
+    <div id="rc-sanity-bar">SAN ████████░░ 80%</div>
   </div>
 </div>
-<div id="focus-hint">⛧ Ph'nglui mglw'nafh ⛧<br>[ KLICK ZUM STARTEN ]</div>
+<div id="rc-focus-hint">⛧ Ph'nglui mglw'nafh ⛧<br>[ KLICK ZUM STARTEN ]</div>
 
 <!-- Ladereihenfolge: constants → map → grid → input → player → raycast → render → minimap → hud → main -->
 <script src="js/constants.js"></script>
@@ -27,5 +27,10 @@
 <script src="js/minimap.js"></script>
 <script src="js/hud.js"></script>
 <script src="js/main.js"></script>
+<script>
+  // Standalone: Container sichtbar machen und Loop starten
+  document.getElementById('rc-container').style.display = 'flex';
+  rcStart();
+</script>
 </body>
 </html>

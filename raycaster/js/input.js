@@ -21,8 +21,10 @@ window.addEventListener('keyup', function(e) {
 
 // ── Fokus-Management ──
 (function setupFocus() {
-  var container = document.getElementById('container');
-  var focusHint = document.getElementById('focus-hint');
+  var container  = document.getElementById('rc-container');
+  var focusHint  = document.getElementById('rc-focus-hint');
+
+  if (!container || !focusHint) return;
 
   function checkFocus() {
     focusHint.style.display = document.activeElement === container ? 'none' : 'block';
@@ -30,7 +32,9 @@ window.addEventListener('keyup', function(e) {
 
   container.addEventListener('focus', checkFocus);
   container.addEventListener('blur', checkFocus);
-  document.addEventListener('click', function() { container.focus(); });
+  document.addEventListener('click', function() {
+    if (container.style.display !== 'none') container.focus();
+  });
 
   /** Global aufrufbar — initiales Fokussieren */
   window.initFocus = function() {

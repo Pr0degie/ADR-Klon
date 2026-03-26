@@ -5,15 +5,16 @@
 //  Danach wird nur textContent + style pro Span aktualisiert —
 //  kein DOM-Rebuild pro Frame.
 //
-//  Stellt bereit: rcGrid[][], setCell()
+//  Stellt bereit: rcGrid[][], rcInitGrid(), setCell()
 //  Benötigt: SCREEN_W, SCREEN_H (constants.js)
 // ============================================================================
 
 var rcGrid = [];  // rcGrid[row][col] = span-Element
 
-(function initGrid() {
-  var screenEl = document.getElementById('screen');
+function rcInitGrid() {
+  var screenEl = document.getElementById('rc-screen');
   screenEl.textContent = '';
+  rcGrid = [];
 
   for (var y = 0; y < SCREEN_H; y++) {
     rcGrid[y] = [];
@@ -27,7 +28,7 @@ var rcGrid = [];  // rcGrid[row][col] = span-Element
       screenEl.appendChild(document.createTextNode('\n'));
     }
   }
-})();
+}
 
 /**
  * Setzt ein einzelnes Zeichen im Grid mit Farbe und Glow.

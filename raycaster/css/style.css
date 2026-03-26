@@ -41,7 +41,7 @@ body::before {
   z-index: 11;
 }
 
-#container {
+#rc-container {
   position: relative;
   padding: 20px 28px;
   border: 1px solid #1a0a2e;
@@ -52,10 +52,12 @@ body::before {
     0 0 120px rgba(20, 184, 166, 0.04),
     inset 0 0 80px rgba(0, 0, 0, 0.6);
   outline: none;
+  display: none;
+  flex-direction: column;
 }
 
 /* ── Render-Fläche ── */
-#screen {
+#rc-screen {
   font-family: 'Courier New', Courier, monospace;
   font-size: 15px;
   line-height: 1.15;
@@ -64,12 +66,12 @@ body::before {
   user-select: none;
 }
 
-#screen span {
+#rc-screen span {
   transition: none;
 }
 
 /* ── HUD-Leiste ── */
-#hud {
+#rc-hud {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -78,7 +80,7 @@ body::before {
   border-top: 1px solid #1a0a2e;
 }
 
-#controls {
+#rc-controls {
   color: #2d1b4e;
   font-family: 'Courier New', monospace;
   font-size: 10px;
@@ -86,7 +88,7 @@ body::before {
   text-transform: uppercase;
 }
 
-#sanity-bar {
+#rc-sanity-bar {
   color: #7c3aed;
   font-family: 'Courier New', monospace;
   font-size: 10px;
@@ -95,7 +97,7 @@ body::before {
 }
 
 /* ── Fokus-Overlay ── */
-#focus-hint {
+#rc-focus-hint {
   position: fixed;
   top: 50%;
   left: 50%;

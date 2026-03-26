@@ -129,6 +129,22 @@
   <div id="end-body"></div>
 </div>
 
+<!-- RAYCASTER OVERLAY -->
+<div id="rc-container" tabindex="0">
+  <div id="rc-inner">
+    <pre id="rc-screen"></pre>
+    <div id="rc-hud">
+      <div id="rc-controls">WASD / PFEILE — BEWEGEN</div>
+      <div id="rc-sanity-bar">SAN ░░░░░░░░░░ 0%</div>
+      <button id="rc-back-btn" onclick="returnToBase()">[ zur basis ]</button>
+    </div>
+  </div>
+  <div id="rc-focus-hint">KLICKEN ZUM FORTFAHREN<br>WASD BEWEGEN &nbsp;·&nbsp; PFEILE DREHEN</div>
+</div>
+
+<!-- DEBUG -->
+<button id="debug-lab-btn" onclick="enterLabyrinth()">[ debug: labyrinth ]</button>
+
 <script src="data.js"></script>
 <script src="map.js"></script>
 <script src="state.js"></script>
@@ -136,5 +152,15 @@
 <script src="base.js"></script>
 <script src="explore.js"></script>
 <script src="game.js"></script>
+<script src="raycaster/js/constants.js"></script>
+<script src="raycaster/js/map.js"></script>
+<script src="raycaster/js/grid.js"></script>
+<script src="raycaster/js/input.js"></script>
+<script src="raycaster/js/player.js"></script>
+<script src="raycaster/js/raycast.js"></script>
+<script src="raycaster/js/render.js"></script>
+<script src="raycaster/js/minimap.js"></script>
+<script src="raycaster/js/hud.js"></script>
+<script src="raycaster/js/main.js"></script>
 </body>
 </html>

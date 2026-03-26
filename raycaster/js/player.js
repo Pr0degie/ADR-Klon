@@ -2,7 +2,7 @@
 //  SPIELER — Zustand & Bewegung
 //  ─────────────────────────────
 //  Stellt bereit: rcPlayer{}, updatePlayer()
-//  Benötigt: isWall() (map.js), rcKeys{} (input.js)
+//  Benötigt: rcIsWall() (map.js), rcKeys{} (input.js)
 // ============================================================================
 
 var rcPlayer = {
@@ -56,14 +56,14 @@ function updatePlayer(dt) {
   var m = 0.2;  // Abstandspuffer
 
   var nx = rcPlayer.x + dx;
-  if (!isWall(nx + m, rcPlayer.y + m) && !isWall(nx + m, rcPlayer.y - m) &&
-      !isWall(nx - m, rcPlayer.y + m) && !isWall(nx - m, rcPlayer.y - m)) {
+  if (!rcIsWall(nx + m, rcPlayer.y + m) && !rcIsWall(nx + m, rcPlayer.y - m) &&
+      !rcIsWall(nx - m, rcPlayer.y + m) && !rcIsWall(nx - m, rcPlayer.y - m)) {
     rcPlayer.x = nx;
   }
 
   var ny = rcPlayer.y + dy;
-  if (!isWall(rcPlayer.x + m, ny + m) && !isWall(rcPlayer.x + m, ny - m) &&
-      !isWall(rcPlayer.x - m, ny + m) && !isWall(rcPlayer.x - m, ny - m)) {
+  if (!rcIsWall(rcPlayer.x + m, ny + m) && !rcIsWall(rcPlayer.x + m, ny - m) &&
+      !rcIsWall(rcPlayer.x - m, ny + m) && !rcIsWall(rcPlayer.x - m, ny - m)) {
     rcPlayer.y = ny;
   }
 }

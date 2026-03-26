@@ -4,7 +4,7 @@
 //  Reiner Algorithmus — keine Rendering-Logik hier.
 //
 //  Stellt bereit: castRay()
-//  Benötigt: MAP, MAP_W, MAP_H (map.js)
+//  Benötigt: RC_MAP, RC_MAP_W, RC_MAP_H (map.js)
 // ============================================================================
 
 /**
@@ -59,10 +59,10 @@ function castRay(ox, oy, angle) {
     }
 
     // Außerhalb der Map?
-    if (mapX < 0 || mapX >= MAP_W || mapY < 0 || mapY >= MAP_H) break;
+    if (mapX < 0 || mapX >= RC_MAP_W || mapY < 0 || mapY >= RC_MAP_H) break;
 
     // Wand getroffen?
-    var cell = MAP[mapY][mapX];
+    var cell = RC_MAP[mapY][mapX];
     if (cell !== 0) {
       hit = true;
       wallType = cell;

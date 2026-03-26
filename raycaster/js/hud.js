@@ -8,13 +8,13 @@
 //  Benötigt: nichts (DOM per ID)
 // ============================================================================
 
-var _sanityEl = document.getElementById('sanity-bar');
-
 /**
  * Sanity-Anzeige aktualisieren (pulsiert zeitbasiert).
  * @param {number} time — Spielzeit in Sekunden
  */
 function updateHud(time) {
+  var _sanityEl = document.getElementById('rc-sanity-bar');
+  if (!_sanityEl) return;
   var pulse  = Math.sin(time * 0.5) * 10 + 70;  // Schwankt 60–80%
   var filled = Math.round(pulse / 10);
   var bar    = '';

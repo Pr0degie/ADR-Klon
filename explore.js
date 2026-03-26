@@ -89,9 +89,23 @@ function enterLabyrinth() {
 
   renderMapUI();
   renderRoomInfo();
+
+  // Raycaster starten
+  var rcCont = document.getElementById('rc-container');
+  if (rcCont) {
+    rcCont.style.display = 'flex';
+    if (typeof rcStart === 'function') rcStart();
+  }
 }
 
 function returnToBase() {
+  // Raycaster stoppen
+  var rcCont = document.getElementById('rc-container');
+  if (rcCont) {
+    rcCont.style.display = 'none';
+    if (typeof rcStop === 'function') rcStop();
+  }
+
   G.phase = 'base';
   document.getElementById('base-art').style.display   = '';
   document.getElementById('scene-desc').style.display = '';
