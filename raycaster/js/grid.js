@@ -36,11 +36,13 @@ function rcInitGrid() {
  * @param {number} x — Spalte
  * @param {string} ch — Das Zeichen
  * @param {{ hex: string, glow: string }} color — Farbobjekt aus COLORS
+ * @param {string} [bgColor] — Optionaler Hintergrund-Hex-Wert (z.B. '#1a0a2e'). Fehlt er, bleibt der Hintergrund transparent.
  */
-function setCell(y, x, ch, color) {
+function setCell(y, x, ch, color, bgColor) {
   if (y < 0 || y >= SCREEN_H || x < 0 || x >= SCREEN_W) return;
   var span = rcGrid[y][x];
   span.textContent = ch;
   span.style.color = color.hex;
   span.style.textShadow = color.glow !== 'none' ? '0 0 8px ' + color.glow : 'none';
+  span.style.backgroundColor = bgColor || '';
 }

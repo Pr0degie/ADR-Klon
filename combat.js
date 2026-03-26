@@ -104,6 +104,12 @@ function endCombat(won) {
   renderMapUI();
   renderRoomInfo();
   renderStats();
+
+  // Raycaster: Sprites neu bauen, HUD aktualisieren, Fokus zurück
+  if (typeof rcBuildSprites === 'function') rcBuildSprites();
+  if (typeof rcUpdateRoomHud === 'function') rcUpdateRoomHud();
+  var rcCont = document.getElementById('rc-container');
+  if (rcCont && rcCont.style.display !== 'none') rcCont.focus();
 }
 
 function checkLevelUp() {

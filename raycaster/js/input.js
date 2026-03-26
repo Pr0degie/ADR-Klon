@@ -1,17 +1,19 @@
 // ============================================================================
 //  INPUT — Tastatur & Fokus
-//  ─────────────────────────
 //  Stellt bereit: rcKeys{}, initFocus()
-//  Benötigt: nichts (DOM-Elemente per ID)
+//  Benötigt: nichts (DOM per ID)
 // ============================================================================
 
-/** Aktuell gedrückte Tasten — rcKeys['KeyW'] === true wenn W gedrückt */
 var rcKeys = {};
 
 window.addEventListener('keydown', function(e) {
   rcKeys[e.code] = true;
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].indexOf(e.code) !== -1) {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code) !== -1) {
     e.preventDefault();
+  }
+  // Interact-Taste: Space oder Enter
+  if ((e.code === 'Space' || e.code === 'Enter') && rcRunning && !rcPaused) {
+    if (typeof rcInteract === 'function') rcInteract();
   }
 });
 
@@ -19,11 +21,9 @@ window.addEventListener('keyup', function(e) {
   rcKeys[e.code] = false;
 });
 
-// ── Fokus-Management ──
 (function setupFocus() {
-  var container  = document.getElementById('rc-container');
-  var focusHint  = document.getElementById('rc-focus-hint');
-
+  var container = document.getElementById('rc-container');
+  var focusHint = document.getElementById('rc-focus-hint');
   if (!container || !focusHint) return;
 
   function checkFocus() {
@@ -36,7 +36,6 @@ window.addEventListener('keyup', function(e) {
     if (container.style.display !== 'none') container.focus();
   });
 
-  /** Global aufrufbar — initiales Fokussieren */
   window.initFocus = function() {
     container.focus();
     checkFocus();

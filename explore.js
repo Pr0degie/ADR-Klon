@@ -31,36 +31,11 @@ function enterLabyrinth() {
   }
 
   // Spezielle Räume pro Ebene spawnen
-  const specials = [
-    { floor:0, key:'pilzraum',     check:()=>!G.pilzraum,                content:'mushroom'     },
-    { floor:1, key:'wasserleitung',check:()=>!G.baseRooms.wasserleitung,  content:'wasserleitung'},
-    { floor:1, key:'surv_schmied', check:()=>!hasSurvivor('schmied'),     content:'survivor', survivorType:'schmied' },
-    { floor:2, key:'schlafkammer', check:()=>!G.baseRooms.schlafkammer,   content:'schlafkammer'},
-    { floor:2, key:'surv_heiler',  check:()=>!hasSurvivor('heiler'),      content:'survivor', survivorType:'heiler'  },
-    { floor:3, key:'funkkabine',   check:()=>!G.baseRooms.funkkabine,     content:'funkkabine'  },
-    { floor:3, key:'surv_wächter', check:()=>!hasSurvivor('wächter'),     content:'survivor', survivorType:'wächter' },
-    { floor:4, key:'waffenlager',  check:()=>!G.baseRooms.waffenlager,    content:'waffenlager' },
-    { floor:4, key:'surv_kartograf',check:()=>!hasSurvivor('kartograf'), content:'survivor', survivorType:'kartograf'},
-    { floor:4, key:'rückblick',   check:()=>!G.unlocked.rückblick,       content:'rückblick' },
-  ];
-  const m = G.map;
-  for (const sp of specials) {
-    if (sp.floor !== G.floor) continue;
-    if (!sp.check()) continue;
-    const candidates = [];
-    m.grid.forEach((row, r) => row.forEach((cell, c) => {
-      if (cell && (cell.content === 'loot' || cell.content === 'empty')) candidates.push({r, c});
-    }));
-    if (candidates.length > 0) {
-      const pick = candidates[Math.floor(Math.random() * candidates.length)];
-      m.grid[pick.r][pick.c].content = sp.content;
-      if (sp.survivorType) m.grid[pick.r][pick.c].survivorType = sp.survivorType;
-      candidates.splice(candidates.indexOf(pick), 1);
-    }
-  }
+  spawnSpecialRooms();
+
   // Kartograf: Karte zu Beginn enthüllen
   if (hasSurvivor('kartograf')) {
-    m.grid.forEach(row => row.forEach(cell => { if (cell) cell.visited = true; }));
+    G.map.grid.forEach(row => row.forEach(cell => { if (cell) cell.visited = true; }));
   }
 
   document.getElementById('base-art').style.display        = 'none';
@@ -70,7 +45,7 @@ function enterLabyrinth() {
   document.getElementById('craft-section').style.display    = 'none';
   document.getElementById('pilzraum-sec').style.display     = 'none';
   document.getElementById('survivor-sec').style.display     = 'none';
-  document.getElementById('map-wrap').style.display         = 'flex';
+  document.getElementById('map-wrap').style.display         = 'none';
 
   document.getElementById('map-floor-num').textContent = G.floor + 1;
   document.getElementById('floor-num').textContent     = G.floor + 1;
@@ -90,10 +65,11 @@ function enterLabyrinth() {
   renderMapUI();
   renderRoomInfo();
 
-  // Raycaster starten
+  // Raycaster starten (ersetzt die 2D-Karte)
   var rcCont = document.getElementById('rc-container');
   if (rcCont) {
     rcCont.style.display = 'flex';
+    if (typeof rcStop === 'function') rcStop();
     if (typeof rcStart === 'function') rcStart();
   }
 }
@@ -171,6 +147,10 @@ function renderRoomInfo() {
   document.getElementById('ft-roomtype').textContent = roomTypeName(room.content, room);
 
   renderMoveButtons();
+
+  // Raycaster-HUD synchronisieren
+  if (typeof rcBuildSprites === 'function') rcBuildSprites();
+  if (typeof rcUpdateRoomHud === 'function') rcUpdateRoomHud();
 }
 
 function roomTypeName(content, room) {
@@ -404,6 +384,36 @@ function showRückblick(r, c) {
 function closeRückblick() {
   document.getElementById('ev-ov').classList.remove('on');
   G.eventPending = false;
+}
+
+function spawnSpecialRooms() {
+  const specials = [
+    { floor:0, key:'pilzraum',      check:()=>!G.pilzraum,                 content:'mushroom'      },
+    { floor:1, key:'wasserleitung', check:()=>!G.baseRooms.wasserleitung,  content:'wasserleitung' },
+    { floor:1, key:'surv_schmied',  check:()=>!hasSurvivor('schmied'),     content:'survivor', survivorType:'schmied'  },
+    { floor:2, key:'schlafkammer',  check:()=>!G.baseRooms.schlafkammer,   content:'schlafkammer'  },
+    { floor:2, key:'surv_heiler',   check:()=>!hasSurvivor('heiler'),      content:'survivor', survivorType:'heiler'   },
+    { floor:3, key:'funkkabine',    check:()=>!G.baseRooms.funkkabine,     content:'funkkabine'    },
+    { floor:3, key:'surv_wächter',  check:()=>!hasSurvivor('wächter'),     content:'survivor', survivorType:'wächter'  },
+    { floor:4, key:'waffenlager',   check:()=>!G.baseRooms.waffenlager,    content:'waffenlager'   },
+    { floor:4, key:'surv_kartograf',check:()=>!hasSurvivor('kartograf'),   content:'survivor', survivorType:'kartograf'},
+    { floor:4, key:'rückblick',    check:()=>!G.unlocked.rückblick,       content:'rückblick'    },
+  ];
+  const m = G.map;
+  for (const sp of specials) {
+    if (sp.floor !== G.floor) continue;
+    if (!sp.check()) continue;
+    const candidates = [];
+    m.grid.forEach((row, r) => row.forEach((cell, c) => {
+      if (cell && (cell.content === 'loot' || cell.content === 'empty')) candidates.push({r, c});
+    }));
+    if (candidates.length > 0) {
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      m.grid[pick.r][pick.c].content = sp.content;
+      if (sp.survivorType) m.grid[pick.r][pick.c].survivorType = sp.survivorType;
+      candidates.splice(candidates.indexOf(pick), 1);
+    }
+  }
 }
 
 function useLeuchtsporen() {

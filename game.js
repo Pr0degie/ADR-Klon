@@ -26,6 +26,12 @@ function descendFloor() {
   G.map = generateFloor(G.floor);
   G.artifactFound = false;
 
+  // Spezielle Räume spawnen
+  if (typeof spawnSpecialRooms === 'function') spawnSpecialRooms();
+  if (typeof hasSurvivor === 'function' && hasSurvivor('kartograf')) {
+    G.map.grid.forEach(row => row.forEach(cell => { if (cell) cell.visited = true; }));
+  }
+
   document.getElementById('map-floor-num').textContent = G.floor+1;
   document.getElementById('floor-num').textContent     = G.floor+1;
   document.getElementById('ft-phase').textContent      = `ebene ${G.floor+1}`;
@@ -40,6 +46,10 @@ function descendFloor() {
 
   renderMapUI();
   renderRoomInfo();
+
+  // Raycaster neustarten mit neuer Map
+  if (typeof rcStop === 'function') rcStop();
+  if (typeof rcStart === 'function') rcStart();
 }
 
 // ================================================================
