@@ -133,6 +133,7 @@
 <div id="rc-container" tabindex="0">
   <div id="rc-inner">
     <pre id="rc-screen"></pre>
+    <canvas id="rc-canvas" style="position:absolute;pointer-events:none"></canvas>
     <div id="rc-hud">
       <div id="rc-room-info"></div>
       <div id="rc-room-btns"></div>
@@ -148,15 +149,16 @@
 <!-- DEBUG -->
 <button id="debug-lab-btn" onclick="enterLabyrinth()">[ debug: labyrinth ]</button>
 
-<script src="data.js"></script>
-<script src="map.js"></script>
-<script src="state.js"></script>
-<script src="combat.js"></script>
-<script src="base.js"></script>
-<script src="explore.js"></script>
-<script src="game.js"></script>
-<script src="lovecraft_sprites.js"></script>
-<script src="rpg_sprites.js"></script>
+<script src="js/data.js"></script>
+<script src="sprites/cthulhu_sprite.js"></script>
+<script src="js/map.js"></script>
+<script src="js/state.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/base.js"></script>
+<script src="js/explore.js"></script>
+<script src="js/game.js"></script>
+<script src="sprites/lovecraft_sprites.js"></script>
+<script src="sprites/rpg_sprites.js"></script>
 <script src="raycaster/js/constants.js"></script>
 <script src="raycaster/js/map.js"></script>
 <script src="raycaster/js/grid.js"></script>

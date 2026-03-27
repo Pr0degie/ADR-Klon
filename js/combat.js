@@ -4,6 +4,16 @@
 // COMBAT
 // ================================================================
 function updateCombatUI() {
+   // Cthulhu-Bild über dem Kampftext anzeigen
+  var overlay = document.getElementById('ev-ov');
+  var existingImg = document.getElementById('cthulhu-combat-img');
+  if (!existingImg) {
+    var img = document.createElement('img');
+    img.id = 'cthulhu-combat-img';
+    img.src = CTHULHU_IMG.src;
+    img.style.cssText = 'width:200px;display:block;margin:0 auto 1rem;filter:drop-shadow(0 0 12px #27ae60)';
+    overlay.prepend(img);
+  }
   const c = G.combat; if (!c) return;
   const {enemy} = c;
   document.getElementById('cbt-art').innerHTML = enemy.art(G.tick);

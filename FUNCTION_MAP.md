@@ -126,7 +126,7 @@
 |------:|---------|
 | 22 | `castRay(ox, oy, angle)` |
 
-### render.js (195 Zeilen)
+### render.js (260 Zeilen)
 | Zeile | Funktion |
 |------:|---------|
 | 11 | `wallStyle(dist, side, wallType, time)` |
@@ -135,6 +135,8 @@
 | 60 | `floorStyle(row)` |
 | 68 | `ceilStyle(row)` |
 | 84 | `renderSprites(depthBuffer, time)` |
+| 202 | `resetCthulhuPos()` — leert _cthulhuTestPos-Cache (Aufruf in rcStart) |
+| 204 | `_drawCthulhuBillboard(depthBuffer)` — Cthulhu-PNG-Billboard via Canvas-Overlay |
 
 ### minimap.js
 | Zeile | Funktion |

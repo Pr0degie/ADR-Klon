@@ -227,6 +227,7 @@ function rcStart() {
     }
   }
   rcPlayer.dir = 0;
+  if (typeof resetCthulhuPos === 'function') resetCthulhuPos();
 
   // Aktuellen Raum setzen
   _rcCurrentRoom = m ? { r: m.pr, c: m.pc } : null;

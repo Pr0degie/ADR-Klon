@@ -192,4 +192,69 @@ function renderSprites(depthBuffer, time) {
       }
     }
   }
+
+  _drawCthulhuBillboard(depthBuffer);
+}
+
+// ── Cthulhu Test-Billboard (renderCthulhu aus cthulhu_sprite.js auf Canvas-Overlay) ──
+var _cthulhuTestPos = null;  // 2 Tiles vor Spawn, einmalig gecacht
+
+function resetCthulhuPos() { _cthulhuTestPos = null; }
+
+function _drawCthulhuBillboard(depthBuffer) {
+  // Position einmalig ermitteln: Startraum-Mitte + 2 Tiles in Startrichtung (dir=0 → +x)
+  if (!_cthulhuTestPos && G && G.map) {
+    var m = G.map, r, c;
+    outer: for (r = 0; r < m.H; r++) {
+      for (c = 0; c < m.W; c++) {
+        if (m.grid[r] && m.grid[r][c] && m.grid[r][c].content === 'start') {
+          var ctr = RC_ROOM_CENTERS[r + ',' + c];
+          if (ctr) _cthulhuTestPos = { x: ctr.x + 2, y: ctr.y };
+          break outer;
+        }
+      }
+    }
+  }
+  if (!_cthulhuTestPos) return;
+
+  var canvas = document.getElementById('rc-canvas');
+  if (!canvas) return;
+  var screen = document.getElementById('rc-screen');
+  if (!screen) return;
+
+  // Canvas auf rc-screen ausrichten
+  var sw = screen.clientWidth, sh = screen.clientHeight;
+  if (canvas.width !== sw)  canvas.width  = sw;
+  if (canvas.height !== sh) canvas.height = sh;
+  canvas.style.left = screen.offsetLeft + 'px';
+  canvas.style.top  = screen.offsetTop  + 'px';
+
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, sw, sh);
+
+  // Billboard-Projektion
+  var dx = _cthulhuTestPos.x - rcPlayer.x;
+  var dy = _cthulhuTestPos.y - rcPlayer.y;
+  var dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 0.5 || dist > MAX_DEPTH) return;
+
+  var spriteAngle = Math.atan2(dy, dx);
+  var relAngle    = spriteAngle - rcPlayer.dir;
+  while (relAngle >  Math.PI) relAngle -= 2 * Math.PI;
+  while (relAngle < -Math.PI) relAngle += 2 * Math.PI;
+  if (Math.abs(relAngle) > FOV / 2 + 0.15) return;
+
+  var perpDist = dist * Math.cos(relAngle);
+  if (perpDist < 0.3) return;
+
+  // Depth-Test an der Mittelspalte
+  var screenColF = (relAngle / FOV + 0.5) * SCREEN_W;
+  var screenColI = Math.floor(screenColF);
+  if (screenColI >= 0 && screenColI < depthBuffer.length && perpDist >= depthBuffer[screenColI]) return;
+
+  // Bildgröße skaliert nach Distanz, Füße auf sh * 0.75
+  var imgH = Math.min(sh, Math.floor(sh / perpDist * 1.5));
+  var screenX = Math.floor((screenColF / SCREEN_W) * sw);
+
+  renderCthulhu(ctx, screenX, sh * 0.75, imgH, Date.now());
 }

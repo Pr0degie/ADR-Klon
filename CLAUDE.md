@@ -16,17 +16,21 @@ TIEF/
 ├── tief-feature-recipes/SKILL.md  ← Rezepte für Multi-Datei-Änderungen
 ├── index.html       ← DOM-Struktur (IDs → siehe unten)
 ├── style.css        ← Styles + Raycaster-CSS (CSS-Vars → siehe unten)
-├── data.js          ← Texte, Konstanten (→ DATA_INDEX.md)
-├── map.js           ← Kartengenerierung
-├── state.js         ← G-Objekt, Tick-Engine, Unlocks
-├── combat.js        ← Kampfsystem
-├── base.js          ← Basis-Phase
-├── explore.js       ← Labyrinth-Phase
-├── game.js          ← Boot, Endings, Stats, Log
+├── js/              ← Spiellogik
+│   ├── data.js      ← Texte, Konstanten (→ DATA_INDEX.md)
+│   ├── map.js       ← Kartengenerierung
+│   ├── state.js     ← G-Objekt, Tick-Engine, Unlocks
+│   ├── combat.js    ← Kampfsystem
+│   ├── base.js      ← Basis-Phase
+│   ├── explore.js   ← Labyrinth-Phase
+│   └── game.js      ← Boot, Endings, Stats, Log
+├── sprites/         ← Sprite-Datendateien (groß, selten bearbeitet)
+│   ├── lovecraft_sprites.js
+│   └── rpg_sprites.js
 └── raycaster/       ← First-Person-Ansicht (→ raycaster/CLAUDE.md)
 ```
 
-**Script-Ladereihenfolge:** `data.js` → `map.js` → `state.js` → `combat.js` → `base.js` → `explore.js` → `game.js` → `lovecraft_sprites.js` → `rpg_sprites.js` → dann 10 Raycaster-Scripts (constants → map → grid → input → player → raycast → render → minimap → hud → main)
+**Script-Ladereihenfolge:** `js/data.js` → `js/map.js` → `js/state.js` → `js/combat.js` → `js/base.js` → `js/explore.js` → `js/game.js` → `sprites/lovecraft_sprites.js` → `sprites/rpg_sprites.js` → dann 10 Raycaster-Scripts (constants → map → grid → input → player → raycast → render → minimap → hud → main)
 
 ## Spielzustand (G)
 
